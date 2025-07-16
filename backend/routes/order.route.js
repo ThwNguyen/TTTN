@@ -1,7 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middlewares/auth.middleware');
-const { createOrder, getMyOrders, payOrder, cancelOrder, getAllOrders, updateOrderStatus } = require('../controllers/order.controller');
+const { protect, isAdmin } = require('../middlewares/auth.middleware');
+const { createOrder, 
+    getMyOrders, 
+    payOrder, 
+    cancelOrder, 
+    getAllOrders, 
+    updateOrderStatus, 
+    getOrderStats, 
+    getDailyRevenue, 
+    getMonthlyRevenue } = require('../controllers/order.controller');
 
 // Tạo đơn hàng
 router.post('/', protect, createOrder);
@@ -11,6 +19,8 @@ router.put('/:id/cancel', protect, cancelOrder);
 
 // Admin routes
 router.get('/', protect, getAllOrders);
-router.put('/:id/status', protect, updateOrderStatus);
-
+router.put('/:id/status', protect, isAdmin, updateOrderStatus);
+router.get('/stats', protect, isAdmin, getOrderStats);
+router.get('/stats/daily', protect, isAdmin, getDailyRevenue);
+router.get('/stats/monthly', protect, isAdmin, getMonthlyRevenue);
 module.exports = router;

@@ -157,8 +157,6 @@ const getAllOrders = async (req, res) => {
   }
 };
 
-
-
 const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -180,11 +178,102 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+
+const getOrderStats = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+
+    const filter = { isPaid: true }; // chỉ tính doanh thu từ đơn đã thanh toán
+
+    if (from || to) {
+      filter.createdAt = {};
+      if (from) {
+        filter.createdAt.$gte = new Date(from);
+      }
+      if (to) {
+        const endDate = new Date(to);
+        endDate.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = endDate;
+      }
+    }
+
+    const orders = await Order.find(filter);
+
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+    res.json({
+      totalOrders,
+      totalRevenue,
+      from: from || 'Tất cả',
+      to: to || 'Tất cả'
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi khi thống kê doanh thu', error: err.message });
+  }
+};
+
+const getDailyRevenue = async (req, res) => {
+  try {
+    const stats = await Order.aggregate([
+      { $match: { isPaid: true } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+          },
+          totalRevenue: { $sum: '$totalAmount' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi thống kê theo ngày', error: err.message });
+  }
+};
+
+const getMonthlyRevenue = async (req, res) => {
+  try {
+    const stats = await Order.aggregate([
+      { $match: { isPaid: true } },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          totalRevenue: { $sum: '$totalAmount' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
+    // Convert format to readable string
+    const formatted = stats.map(s => ({
+      month: `${s._id.month}/${s._id.year}`,
+      totalRevenue: s.totalRevenue,
+      count: s.count
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi thống kê theo tháng', error: err.message });
+  }
+};
+
+
 module.exports = {
   createOrder,
   getMyOrders,
   payOrder,
   cancelOrder,
   getAllOrders,
-  updateOrderStatus
+  updateOrderStatus,
+  getOrderStats,
+  getDailyRevenue,
+  getMonthlyRevenue
 };
