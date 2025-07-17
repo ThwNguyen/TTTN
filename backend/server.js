@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth.route');
 const productRoutes = require('./routes/product.route');
 const uploadRoutes = require('./routes/upload.route');
 const orderRoutes = require('./routes/order.route');
+const cartRoutes = require('./routes/cart.route');
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Serve static files for uploads
 app.use('/uploads', express.static('uploads'));

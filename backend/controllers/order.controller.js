@@ -64,6 +64,36 @@ const getMyOrders = async (req, res) => {
   }
 };
 
+const getOrderById = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const userId = req.user._id;
+    const userRole = req.user.role;
+
+    const order = await Order.findById(orderId)
+      .populate("items.product", "name price images")
+      .populate("user", "name email");
+
+    if (!order) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    }
+
+    // Nếu không phải admin và không phải chủ đơn hàng thì cấm truy cập
+    if (userRole !== "admin" && order.user._id.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Bạn không có quyền xem đơn hàng này" });
+    }
+
+    res.status(200).json({
+      message: "Chi tiết đơn hàng",
+      order,
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy đơn hàng:", error);
+    res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
+
+
 const payOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -269,6 +299,7 @@ const getMonthlyRevenue = async (req, res) => {
 module.exports = {
   createOrder,
   getMyOrders,
+  getOrderById,
   payOrder,
   cancelOrder,
   getAllOrders,

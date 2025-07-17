@@ -6,14 +6,16 @@ const { createOrder,
     payOrder, 
     cancelOrder, 
     getAllOrders, 
+    getOrderById,
     updateOrderStatus, 
     getOrderStats, 
     getDailyRevenue, 
     getMonthlyRevenue } = require('../controllers/order.controller');
 
-// Tạo đơn hàng
+// User routes
 router.post('/', protect, createOrder);
 router.get('/my-orders', protect, getMyOrders);
+router.get('/my-orders/:id', protect, getOrderById);
 router.put('/:id/pay', protect, payOrder);
 router.put('/:id/cancel', protect, cancelOrder);
 
