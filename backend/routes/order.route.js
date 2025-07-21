@@ -20,7 +20,7 @@ router.put('/:id/pay', protect, payOrder);
 router.put('/:id/cancel', protect, cancelOrder);
 
 // Admin routes
-router.get('/', protect, getAllOrders);
+router.get('/', protect, isAdmin, getAllOrders);
 router.put('/:id/status', protect, isAdmin, updateOrderStatus);
 router.get('/stats', protect, isAdmin, getOrderStats);
 router.get('/stats/daily', protect, isAdmin, getDailyRevenue);

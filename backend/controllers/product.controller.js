@@ -1,24 +1,74 @@
 const Product = require('../models/Product');
 const express = require('express');
+const Category = require('../models/Category');
 
 // [GET] /api/products?keyword=...&category=...
+
 const getAllProducts = async (req, res) => {
   try {
-    const keyword = req.query.keyword
-      ? { name: { $regex: req.query.keyword, $options: 'i' } }
-      : {};
+    const {
+      search,
+      category,
+      minPrice,
+      maxPrice,
+      isFeatured,
+      sort,
+      page = 1,
+      limit = 10
+    } = req.query;
 
-    const category = req.query.category
-      ? { category: req.query.category }
-      : {};
+    const queryObj = {};
 
-    const products = await Product.find({ ...keyword, ...category });
+    // Tìm kiếm theo tên
+    if (search) {
+      queryObj.name = { $regex: search, $options: 'i' };
+    }
 
-    res.json(products);
+    // Lọc theo category
+    if (category) {
+      queryObj.category = category;
+    }
+
+    // Lọc theo nổi bật
+    if (isFeatured) {
+      queryObj.isFeatured = isFeatured === 'true';
+    }
+
+    // Lọc theo khoảng giá
+    if (minPrice || maxPrice) {
+      queryObj.price = {};
+      if (minPrice) queryObj.price.$gte = Number(minPrice);
+      if (maxPrice) queryObj.price.$lte = Number(maxPrice);
+    }
+
+    // Sắp xếp
+    let sortOption = { createdAt: -1 }; // mặc định mới nhất
+    if (sort === 'price_asc') sortOption = { price: 1 };
+    else if (sort === 'price_desc') sortOption = { price: -1 };
+    else if (sort === 'newest') sortOption = { createdAt: -1 };
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const total = await Product.countDocuments(queryObj);
+
+    const products = await Product.find(queryObj)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(Number(limit))
+      .populate('category', 'name'); // lấy tên danh mục
+
+    res.status(200).json({
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
+      products
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Lỗi server khi lấy sản phẩm', error: err.message });
+    res.status(500).json({ message: 'Lỗi khi lấy danh sách sản phẩm', error: err.message });
   }
 };
+
+
 
 // [GET] /api/products/:id
 const getProductById = async (req, res) => {
@@ -45,6 +95,13 @@ const createProduct = async (req, res) => {
       isFeatured
     } = req.body;
 
+    if (!category) 
+      return res.status(400).json({ message: 'Vui lòng chọn danh mục' });
+    
+    const foundCategory = await Category.findById(category);
+    if (!foundCategory) 
+      return res.status(400).json({ message: 'Danh mục không tồn tại' });
+    
     const newProduct = new Product({
       name,
       description,

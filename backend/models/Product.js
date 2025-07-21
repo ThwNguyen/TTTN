@@ -36,12 +36,14 @@ const productSchema = new mongoose.Schema({
     required: [true, 'Vui lòng nhập giá sản phẩm']
   },
   category: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
     required: [true, 'Vui lòng chọn danh mục']
   },
   stock: {
     type: Number,
-    default: 0
+    default: 0,
+    min: 0
   },
   images: {
     type: [String],
@@ -57,5 +59,7 @@ const productSchema = new mongoose.Schema({
   },
   feedbacks: [feedbackSchema]
 }, { timestamps: true });
+
+
 
 module.exports = mongoose.model('Product', productSchema);

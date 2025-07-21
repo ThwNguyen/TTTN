@@ -1,4 +1,3 @@
-// models/Order.js
 const mongoose = require('mongoose');
 
 const orderItemSchema = new mongoose.Schema({
@@ -7,9 +6,35 @@ const orderItemSchema = new mongoose.Schema({
     ref: 'Product',
     required: true
   },
-  quantity: { type: Number, required: true },
-  price: { type: Number, required: true }
-}, { _id: false });
+  quantity: {
+    type: Number,
+    required: true,
+    min: 1
+  }
+});
+
+const shippingAddressSchema = new mongoose.Schema({
+  fullName: {
+    type: String,
+    required: true
+  },
+  phone: {
+    type: String,
+    required: true
+  },
+  addressLine: {
+    type: String,
+    required: true
+  },
+  city: {
+    type: String,
+    required: true
+  },
+  postalCode: {
+    type: String,
+    required: true
+  }
+});
 
 const orderSchema = new mongoose.Schema({
   user: {
@@ -18,22 +43,23 @@ const orderSchema = new mongoose.Schema({
     required: true
   },
   items: [orderItemSchema],
-  shippingAddr: {
-    type: String,
-    required: true
-  },
+  shippingAddr: shippingAddressSchema,
   paymentMethod: {
     type: String,
-    enum: ['cod', 'momo'],
-    default: 'cod'
+    enum: ['COD', 'MoMo', 'PayPal'],
+    default: 'COD'
   },
   totalAmount: {
     type: Number,
     required: true
   },
+  note: {
+    type: String,
+    default: ''
+  },
   status: {
     type: String,
-    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+    enum: ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled'],
     default: 'pending'
   },
   isPaid: {
@@ -43,6 +69,8 @@ const orderSchema = new mongoose.Schema({
   paidAt: {
     type: Date
   }
-}, { timestamps: true });
+}, {
+  timestamps: true
+});
 
 module.exports = mongoose.model('Order', orderSchema);

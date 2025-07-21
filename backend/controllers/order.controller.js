@@ -4,13 +4,12 @@ const Product = require('../models/Product');
 // [POST] /api/orders - Tạo đơn hàng mới (user)
 const createOrder = async (req, res) => {
   try {
-    const { items, shippingAddr, paymentMethod } = req.body;
+    const { items, shippingAddr, paymentMethod, note } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: 'Đơn hàng không có sản phẩm' });
     }
 
-    // Tính tổng tiền
     let totalAmount = 0;
     const populatedItems = [];
 
@@ -22,7 +21,7 @@ const createOrder = async (req, res) => {
         return res.status(400).json({ message: `Sản phẩm "${product.name}" không đủ hàng` });
       }
 
-      // Trừ tồn kho (nếu bạn muốn)
+      // Trừ tồn kho
       product.stock -= items[i].quantity;
       await product.save();
 
@@ -41,7 +40,8 @@ const createOrder = async (req, res) => {
       items: populatedItems,
       shippingAddr,
       paymentMethod,
-      totalAmount
+      totalAmount: totalAmount,
+      note: note || '' // thêm note nếu có, mặc định chuỗi rỗng
     });
 
     const savedOrder = await newOrder.save();
@@ -50,6 +50,7 @@ const createOrder = async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi tạo đơn hàng', error: err.message });
   }
 };
+
 
 const getMyOrders = async (req, res) => {
   try {
