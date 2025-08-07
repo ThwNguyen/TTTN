@@ -64,6 +64,7 @@ const getAllProducts = async (req, res) => {
       products
     });
   } catch (err) {
+    console.error('getAllProducts error:', err); // Add this line
     res.status(500).json({ message: 'Lỗi khi lấy danh sách sản phẩm', error: err.message });
   }
 };
@@ -199,6 +200,22 @@ const addFeedback = async (req, res) => {
   }
 };
 
+const getProductSearch = async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query || typeof query !== 'string') return res.status(400).json({ message: 'Thiếu từ khoá tìm kiếm' });
+
+    const products = await Product.find({
+      name: { $regex: query, $options: 'i' }
+    }); // Remove .collation({ locale: 'vi', strength: 1 })
+
+    res.json(products);
+  } catch (err) {
+    console.error('Search error:', err);
+    res.status(500).json({ message: 'Lỗi khi tìm kiếm sản phẩm', error: err.message });
+  }
+};
+
 
 module.exports = {
   getAllProducts,
@@ -206,6 +223,7 @@ module.exports = {
   createProduct,
   deleteProduct,
   updateProduct,
-  addFeedback
+  addFeedback,
+  getProductSearch
 };
 

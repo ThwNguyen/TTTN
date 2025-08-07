@@ -1,15 +1,19 @@
 // import React, { useEffect, useState } from 'react';
 // import { useNavigate } from 'react-router-dom';
 import HMlogo from '../assets/HMlogo.png';
+import { FaShoppingCart } from 'react-icons/fa';
 
 // src/components/Header.jsx
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { AuthContext } from '../contexts/auth.context.jsx';
 import { Link, useNavigate } from 'react-router-dom';
+import { CartContext } from '../contexts/cart.context.jsx';
 
 const Header = () => {
   const { currentUser, setCurrentUser } = useContext(AuthContext);
+  const { cart } = useContext(CartContext); // Get cart from context
   const navigate = useNavigate();
+  const [search, setSearch] = useState('');
 
   const handleLogout = async () => {
     try {
@@ -25,29 +29,69 @@ const Header = () => {
     }
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (search.trim()) {
+      navigate(`/search?search=${encodeURIComponent(search.trim())}`);
+    }
+  };
+
   return (
     <header style={styles.header}>
       {/* Logo */}
       <div style={styles.left}>
-        <img src={HMlogo} alt="HM Logo" style={styles.logo} />
+        <img
+          src={HMlogo}
+          alt="HM Logo"
+          style={styles.logo}
+          onClick={() => navigate('/')}
+          className="logo-clickable"
+        />
       </div>
       {/* Search bar */}
       <div style={styles.center}>
-        <div style={styles.searchBox}>
+        <form style={styles.searchBox} onSubmit={handleSearch}>
           <span style={styles.searchIcon}>&#128269;</span>
           <input
             type="text"
             placeholder="search"
             style={styles.searchInput}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
           />
-          <button style={styles.micBtn}>
+          <button type="submit" style={styles.micBtn}>
             <span role="img" aria-label="mic">🎤</span>
           </button>
-        </div>
+        </form>
       </div>
       {/* Cart, User */}
       <div style={styles.right}>
-        <span style={styles.cartIcon} title="Cart">&#128722;</span>
+        <span
+          style={styles.cartIcon}
+          title="Cart"
+          onClick={() => navigate('/cart')}
+        >
+          <FaShoppingCart />
+          {cart.length > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: 8,
+              right: 18,
+              background: '#d32f2f',
+              color: '#fff',
+              borderRadius: '50%',
+              fontSize: 13,
+              width: 20,
+              height: 20,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 700,
+            }}>
+              {cart.length}
+            </span>
+          )}
+        </span>
         <span style={styles.userIcon} title="User">&#128100;</span>
         {currentUser ? (
           <>
@@ -151,6 +195,8 @@ const styles = {
     fontSize: 26,
     marginRight: 10,
     cursor: 'pointer',
+    position: 'relative',
+    color: '#8d6748', // Add your desired color here
   },
   userIcon: {
     fontSize: 26,

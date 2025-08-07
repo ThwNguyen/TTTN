@@ -91,7 +91,7 @@ export default function Homepage() {
   );
 }
 
-// ⭐ Render rate (1-5 sao)
+// Render rate (1-5 sao)
 function renderStars(rate) {
   const full = Math.floor(rate);
   const half = rate % 1 >= 0.5;
@@ -110,7 +110,7 @@ function renderStars(rate) {
   );
 }
 
-// 💰 Format tiền
+// Format tiền
 function formatCurrency(price) {
   return price?.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) || '';
 }
