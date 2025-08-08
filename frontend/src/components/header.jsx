@@ -1,17 +1,14 @@
-// import React, { useEffect, useState } from 'react';
-// import { useNavigate } from 'react-router-dom';
-import HMlogo from '../assets/HMlogo.png';
+import React, { useContext, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaShoppingCart } from 'react-icons/fa';
 
-// src/components/Header.jsx
-import React, { useContext, useState } from 'react';
+import HMlogo from '../assets/HMlogo.png';
 import { AuthContext } from '../contexts/auth.context.jsx';
-import { Link, useNavigate } from 'react-router-dom';
 import { CartContext } from '../contexts/cart.context.jsx';
 
 const Header = () => {
   const { currentUser, setCurrentUser } = useContext(AuthContext);
-  const { cart } = useContext(CartContext); // Get cart from context
+  const { cart } = useContext(CartContext); // Đọc cart từ context
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
 
@@ -48,7 +45,8 @@ const Header = () => {
           className="logo-clickable"
         />
       </div>
-      {/* Search bar */}
+
+      {/* Search */}
       <div style={styles.center}>
         <form style={styles.searchBox} onSubmit={handleSearch}>
           <span style={styles.searchIcon}>&#128269;</span>
@@ -57,42 +55,31 @@ const Header = () => {
             placeholder="search"
             style={styles.searchInput}
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
           />
           <button type="submit" style={styles.micBtn}>
             <span role="img" aria-label="mic">🎤</span>
           </button>
         </form>
       </div>
-      {/* Cart, User */}
+
+      {/* Cart & User */}
       <div style={styles.right}>
         <span
           style={styles.cartIcon}
-          title="Cart"
+          title="Giỏ hàng"
           onClick={() => navigate('/cart')}
         >
           <FaShoppingCart />
-          {cart.length > 0 && (
-            <span style={{
-              position: 'absolute',
-              top: 8,
-              right: 18,
-              background: '#d32f2f',
-              color: '#fff',
-              borderRadius: '50%',
-              fontSize: 13,
-              width: 20,
-              height: 20,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 700,
-            }}>
+          {cart && cart.length > 0 && (
+            <span style={styles.cartBadge}>
               {cart.length}
             </span>
           )}
         </span>
+
         <span style={styles.userIcon} title="User">&#128100;</span>
+
         {currentUser ? (
           <>
             <span style={styles.userName}>{currentUser.name}</span>
@@ -142,6 +129,7 @@ const styles = {
     width: 38,
     objectFit: 'contain',
     marginRight: 8,
+    cursor: 'pointer',
   },
   center: {
     flex: 1,
@@ -196,7 +184,22 @@ const styles = {
     marginRight: 10,
     cursor: 'pointer',
     position: 'relative',
-    color: '#8d6748', // Add your desired color here
+    color: '#8d6748',
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 0,
+    background: '#d32f2f',
+    color: '#fff',
+    borderRadius: '50%',
+    fontSize: 13,
+    width: 20,
+    height: 20,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 700,
   },
   userIcon: {
     fontSize: 26,

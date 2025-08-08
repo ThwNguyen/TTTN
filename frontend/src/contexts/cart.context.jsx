@@ -1,62 +1,44 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState } from 'react';
 
 export const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
 
-  // Fetch cart from backend on mount or when user changes
-  useEffect(() => {
-    async function fetchCart() {
-      try {
-        const res = await fetch('http://localhost:5000/api/cart', { credentials: 'include' });
-        const data = await res.json();
-        setCart(data.items || []);
-      } catch (err) {
-        setCart([]);
-      }
-    }
-    fetchCart();
-  }, []);
-
-  // Fetch cart from backend
+  // Lấy giỏ hàng từ backend
   const fetchCart = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/cart', { credentials: 'include' });
+      const res = await fetch('http://localhost:5000/api/cart', {
+        credentials: 'include',
+      });
       const data = await res.json();
-      setCart(data.items || []);
+      setCart(data.cart || []);
     } catch (err) {
+      console.error('Lỗi khi lấy giỏ hàng:', err);
       setCart([]);
     }
   };
 
-  // Add product to cart (sync with backend)
+  // Thêm sản phẩm vào giỏ hàng
   const addToCart = async (product, qty = 1) => {
     try {
       const res = await fetch('http://localhost:5000/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ productId: product.id, qty }),
+        body: JSON.stringify({
+          productId: product._id || product.id, // hỗ trợ cả _id và id
+          qty,
+        }),
       });
       const data = await res.json();
       setCart(data.items || []);
-    } catch (err) {}
+    } catch (err) {
+      console.error('Lỗi khi thêm vào giỏ hàng:', err);
+    }
   };
 
-  // Remove product from cart (sync with backend)
-  const removeFromCart = async (productId) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/cart/remove/${productId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      const data = await res.json();
-      setCart(data.items || []);
-    } catch (err) {}
-  };
-
-  // Update quantity (sync with backend)
+  // Cập nhật số lượng sản phẩm trong giỏ
   const updateQty = async (productId, qty) => {
     try {
       const res = await fetch('http://localhost:5000/api/cart/update', {
@@ -67,22 +49,66 @@ export function CartProvider({ children }) {
       });
       const data = await res.json();
       setCart(data.items || []);
-    } catch (err) {}
+    } catch (err) {
+      console.error('Lỗi khi cập nhật số lượng:', err);
+    }
   };
 
-  // Clear cart (sync with backend)
-  const clearCart = async () => {
+  // Xoá 1 sản phẩm khỏi giỏ
+  const removeFromCart = async (productId) => {
     try {
-      await fetch('http://localhost:5000/api/cart/clear', {
+      const res = await fetch(`http://localhost:5000/api/cart/remove/${productId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
-      setCart([]);
-    } catch (err) {}
+      const data = await res.json();
+      setCart(data.items || []);
+    } catch (err) {
+      console.error('Lỗi khi xoá sản phẩm khỏi giỏ:', err);
+    }
+  };
+
+  // Xoá toàn bộ giỏ hàng
+  const clearCart = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/cart/clear', {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        setCart([]);
+      }
+    } catch (err) {
+      console.error('Lỗi khi xoá toàn bộ giỏ hàng:', err);
+    }
+  };
+
+  // Thanh toán 1 sản phẩm
+  const checkoutProduct = async (productId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/cart/checkout/${productId}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      setCart(data.items || []);
+    } catch (err) {
+      console.error('Lỗi khi thanh toán sản phẩm:', err);
+    }
   };
 
   return (
-    <CartContext.Provider value={{ cart, fetchCart, addToCart, removeFromCart, updateQty, clearCart }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        fetchCart,
+        addToCart,
+        updateQty,
+        removeFromCart,
+        clearCart,
+        checkoutProduct,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
