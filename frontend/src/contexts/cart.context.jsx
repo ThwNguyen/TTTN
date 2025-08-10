@@ -8,7 +8,7 @@ export function CartProvider({ children }) {
   // Lấy giỏ hàng từ backend
   const fetchCart = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/cart', {
+      const res = await fetch('/api/cart', {
         credentials: 'include',
       });
       const data = await res.json();
@@ -20,35 +20,35 @@ export function CartProvider({ children }) {
   };
 
   // Thêm sản phẩm vào giỏ hàng
-  const addToCart = async (product, qty = 1) => {
+  const addToCart = async (product, quantity = 1) => {
     try {
-      const res = await fetch('http://localhost:5000/api/cart', {
+      const res = await fetch('/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          productId: product._id || product.id, // hỗ trợ cả _id và id
-          qty,
+          productId: product._id || product.id,
+          quantity,
         }),
       });
       const data = await res.json();
-      setCart(data.items || []);
+      setCart(data.cart?.items || []);
     } catch (err) {
       console.error('Lỗi khi thêm vào giỏ hàng:', err);
     }
   };
 
   // Cập nhật số lượng sản phẩm trong giỏ
-  const updateQty = async (productId, qty) => {
+  const updateQty = async (productId, quantity) => {
     try {
-      const res = await fetch('http://localhost:5000/api/cart/update', {
+      const res = await fetch('/api/cart/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ productId, qty }),
+        body: JSON.stringify({ productId, quantity }),
       });
       const data = await res.json();
-      setCart(data.items || []);
+      setCart(data.cart?.items || []);
     } catch (err) {
       console.error('Lỗi khi cập nhật số lượng:', err);
     }
@@ -57,12 +57,12 @@ export function CartProvider({ children }) {
   // Xoá 1 sản phẩm khỏi giỏ
   const removeFromCart = async (productId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/cart/remove/${productId}`, {
+      const res = await fetch(`/api/cart/remove/${productId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
       const data = await res.json();
-      setCart(data.items || []);
+      setCart(data.cart?.items || []);
     } catch (err) {
       console.error('Lỗi khi xoá sản phẩm khỏi giỏ:', err);
     }
@@ -71,7 +71,7 @@ export function CartProvider({ children }) {
   // Xoá toàn bộ giỏ hàng
   const clearCart = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/cart/clear', {
+      const res = await fetch('/api/cart/clear', {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -86,12 +86,12 @@ export function CartProvider({ children }) {
   // Thanh toán 1 sản phẩm
   const checkoutProduct = async (productId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/cart/checkout/${productId}`, {
+      const res = await fetch(`/api/cart/checkout/${productId}`, {
         method: 'POST',
         credentials: 'include',
       });
       const data = await res.json();
-      setCart(data.items || []);
+      setCart(data.cart?.items || []);
     } catch (err) {
       console.error('Lỗi khi thanh toán sản phẩm:', err);
     }

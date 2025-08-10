@@ -78,6 +78,7 @@ const getCart = async (req, res) => {
   }
 };
 
+//controller
 const updateCartItem = async (req, res) => {
   const { productId, quantity } = req.body;
   if (!productId || quantity < 1)
