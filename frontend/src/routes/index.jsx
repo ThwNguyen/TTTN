@@ -5,7 +5,8 @@ import Login from '../pages/auth/login';
 import Register from '../pages/auth/register';
 import ProductDetail from '../pages/client/productDetail'; 
 import Search from '../pages/client/search';
-import Cart from '../pages/client/cart'; // Add this import
+import Cart from '../pages/client/cart'; 
+import Order from '../pages/client/order';
 
 export default function AppRoutes() {
   return (
@@ -15,7 +16,8 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/search" element={<Search />} />
-      <Route path="/cart" element={<Cart />} /> {/* Add this line for cart route */}
+      <Route path="/cart" element={<Cart />} /> 
+      <Route path="/order" element={<Order />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

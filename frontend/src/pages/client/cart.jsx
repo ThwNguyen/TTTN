@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { CartContext } from '../../contexts/cart.context.jsx';
+import buttonBuyNow from '../../components/btnBuy.jsx';
 
 export default function Cart() {
   const { cart, updateQty, removeFromCart, fetchCart } = useContext(CartContext);
@@ -7,7 +8,7 @@ export default function Cart() {
   const [checkedIds, setCheckedIds] = useState([]);
 
   useEffect(() => {
-    fetchCart(); // Tải giỏ hàng từ server khi load
+    fetchCart(); 
   }, []);
 
   useEffect(() => {
@@ -172,19 +173,7 @@ export default function Cart() {
           Tổng cộng ({totalItems} sản phẩm): <span style={{ color: '#8d6748' }}>{totalPrice.toLocaleString()} đ</span>
         </span>
 
-        <button style={{
-          padding: '8px 24px',
-          border: '2px solid #222',
-          background: '#e5c49b',
-          fontWeight: 500,
-          cursor: 'pointer',
-          borderRadius: 6,
-          color: '#111',
-          fontSize: 16,
-          marginRight: 8
-        }}>
-          Mua hàng
-        </button>
+        <buttonBuyNow />
 
         <button onClick={handleRemove} style={{
           padding: '8px 24px',

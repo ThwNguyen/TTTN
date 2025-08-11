@@ -80,7 +80,8 @@ const getCart = async (req, res) => {
 
 //controller
 const updateCartItem = async (req, res) => {
-  const { productId, quantity } = req.body;
+  const {quantity } = req.body;
+  const { productId } = req.params;
   if (!productId || quantity < 1)
     return res.status(400).json({ message: 'Dữ liệu không hợp lệ' });
 
@@ -88,7 +89,7 @@ const updateCartItem = async (req, res) => {
     const cart = await Cart.findOne({ user: req.user._id });
     if (!cart) return res.status(404).json({ message: 'Không tìm thấy giỏ hàng' });
 
-    const item = cart.items.find(i => i.product.toString() === productId);
+    const item = cart.items.find(i => i._id.toString() === productId);
     if (!item) return res.status(404).json({ message: 'Sản phẩm không có trong giỏ hàng' });
 
     item.quantity = quantity;

@@ -5,6 +5,7 @@ import Footer from '../../components/footer';
 import { CartContext } from '../../contexts/cart.context.jsx';
 import { AuthContext } from '../../contexts/auth.context.jsx';
 import BtnAddToCart from '../../components/btnAddtocart.jsx';
+import BuyNowButton from '../../components/btnBuy.jsx';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -57,12 +58,7 @@ export default function ProductDetail() {
           <div style={styles.stock}>Còn hàng: {product.stock || 0}</div>
           <div style={styles.btnRow}>
             <BtnAddToCart product={product} qty={qty} />
-            <button
-              style={styles.btn}
-              onClick={() => navigate('/order')}
-            >
-              Mua ngay
-            </button>
+            <BuyNowButton />
           </div>
         </div>
       </div>

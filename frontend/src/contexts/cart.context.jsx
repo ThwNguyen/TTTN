@@ -12,6 +12,7 @@ export function CartProvider({ children }) {
         credentials: 'include',
       });
       const data = await res.json();
+      console.log('data',data)
       setCart(data.cart || []);
     } catch (err) {
       console.error('Lỗi khi lấy giỏ hàng:', err);
@@ -41,11 +42,12 @@ export function CartProvider({ children }) {
   // Cập nhật số lượng sản phẩm trong giỏ
   const updateQty = async (productId, quantity) => {
     try {
-      const res = await fetch('/api/cart/update', {
+      // console.log("productId",productId, "quantity", quantity);
+      const res = await fetch(`http://localhost:5000/api/cart/update/${productId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ productId, quantity }),
+        body: JSON.stringify({ quantity }),
       });
       const data = await res.json();
       setCart(data.cart?.items || []);

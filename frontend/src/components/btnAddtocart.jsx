@@ -46,7 +46,7 @@ export default function BtnAddToCart({ product, qty = 1 }) {
           fontSize: 18,
           fontWeight: 600,
           zIndex: 9999,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+          boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
         }}>
           {`Đã thêm ${qty} sản phẩm vào giỏ`}
         </div>
