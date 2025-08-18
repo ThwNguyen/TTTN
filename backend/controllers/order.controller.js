@@ -25,13 +25,13 @@ const createOrder = async (req, res) => {
       product.stock -= items[i].quantity;
       await product.save();
 
-      const price = product.price;
-      totalAmount += price * items[i].quantity;
+      const unitPrice = Number(product.price) || 0;
+      totalAmount += unitPrice * items[i].quantity;
 
       populatedItems.push({
         product: product._id,
         quantity: items[i].quantity,
-        price
+        inTimePrice: unitPrice,
       });
     }
 
@@ -45,6 +45,43 @@ const createOrder = async (req, res) => {
     });
 
     const savedOrder = await newOrder.save();
+    // Add initial status history (pending by default)
+    try {
+      await Order.findByIdAndUpdate(savedOrder._id, {
+        $push: { statusHistory: { status: 'pending', changedAt: new Date(), note: 'Tạo đơn hàng' } }
+      });
+    } catch { }
+
+    // Save address info to user profile on each order
+    try {
+      const User = require('../models/User');
+      const u = await User.findById(req.user._id);
+      if (u) {
+        u.address = (shippingAddr?.addressLine || '').trim();
+        u.city = (shippingAddr?.city || '').trim();
+        u.zipCode = (shippingAddr?.postalCode || '').trim();
+        if (shippingAddr?.phone) {
+          u.phone = String(shippingAddr.phone).trim();
+        }
+        await u.save();
+      }
+    } catch (e) {
+      console.warn('Không thể lưu địa chỉ người dùng khi đặt hàng:', e?.message);
+    }
+    // Fire-and-forget order confirmation email
+    try {
+      const User = require('../models/User');
+      const u = await User.findById(req.user._id).select('name email');
+      if (u?.email) {
+        const { sendOrderConfirmationEmail } = require('../utils/emailService');
+        // populate product names for email
+        const orderForEmail = await Order.findById(savedOrder._id).populate('items.product', 'name');
+        sendOrderConfirmationEmail(u.email, orderForEmail.toObject(), u.name);
+      }
+    } catch (e) {
+      console.warn('Gửi email xác nhận đơn hàng thất bại:', e?.message);
+    }
+
     res.status(201).json({ message: 'Đặt hàng thành công', order: savedOrder });
   } catch (err) {
     res.status(500).json({ message: 'Lỗi khi tạo đơn hàng', error: err.message });
@@ -126,7 +163,8 @@ const cancelOrder = async (req, res) => {
       return res.status(403).json({ message: 'Bạn không có quyền hủy đơn này' });
     }
 
-    if (['shipped', 'delivered', 'cancelled'].includes(order.status)) {
+    // Block cancel once the order is already on the way or done (support both new and legacy names)
+    if (['shipped', 'shipping', 'delivered', 'finished', 'cancelled'].includes(order.status)) {
       return res.status(400).json({ message: `Không thể hủy đơn ở trạng thái "${order.status}"` });
     }
 
@@ -140,6 +178,8 @@ const cancelOrder = async (req, res) => {
     }
 
     order.status = 'cancelled';
+    order.statusHistory = order.statusHistory || [];
+    order.statusHistory.push({ status: 'cancelled', changedAt: new Date(), note: 'Người dùng hủy đơn' });
     await order.save();
 
     res.json({ message: 'Đã hủy đơn hàng thành công và hoàn lại tồn kho', order });
@@ -156,7 +196,7 @@ const getAllOrders = async (req, res) => {
 
     // Lọc theo trạng thái (giữ lại nếu đang có)
     if (status) {
-      const allowedStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+      const allowedStatuses = ['pending', 'processing', 'shipped', 'delivered', 'finished', 'cancelled'];
       if (!allowedStatuses.includes(status)) {
         return res.status(400).json({ message: 'Trạng thái không hợp lệ' });
       }
@@ -195,12 +235,14 @@ const updateOrderStatus = async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
 
-    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'finished', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Trạng thái không hợp lệ' });
     }
 
     order.status = status;
+    order.statusHistory = order.statusHistory || [];
+    order.statusHistory.push({ status, changedAt: new Date(), note: `Admin cập nhật trạng thái` });
     await order.save();
 
     res.json({ message: 'Cập nhật trạng thái đơn thành công', order });
@@ -296,6 +338,37 @@ const getMonthlyRevenue = async (req, res) => {
   }
 };
 
+// [PUT] /api/orders/:id/mark-paid - Admin marks a delivered COD order as paid
+const adminMarkPaid = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+
+    // Only for COD orders
+    if (order.paymentMethod !== 'COD') {
+      return res.status(400).json({ message: 'Chỉ có thể ghi nhận thanh toán cho đơn COD' });
+    }
+
+    // Only when delivered
+    if (order.status !== 'delivered') {
+      return res.status(400).json({ message: 'Chỉ ghi nhận thanh toán khi đơn đã giao thành công (delivered)' });
+    }
+
+    if (order.isPaid) {
+      return res.status(400).json({ message: 'Đơn hàng đã được ghi nhận thanh toán trước đó' });
+    }
+
+    order.isPaid = true;
+    order.paidAt = new Date();
+    order.statusHistory = order.statusHistory || [];
+    order.statusHistory.push({ status: 'delivered', changedAt: new Date(), note: 'Admin ghi nhận thanh toán COD' });
+    await order.save();
+
+    res.json({ message: 'Đã ghi nhận thanh toán COD cho đơn hàng', order });
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi khi ghi nhận thanh toán', error: err.message });
+  }
+};
 
 module.exports = {
   createOrder,

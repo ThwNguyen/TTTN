@@ -10,7 +10,12 @@ const orderItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: 1
-  }
+  },
+  // Unit price at the time of ordering (snapshot)
+  inTimePrice: {
+    type: Number,
+  },
+
 });
 
 const shippingAddressSchema = new mongoose.Schema({
@@ -59,7 +64,9 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled'],
+    // Align with controller/frontend: use processing, shipped.
+    // Keep legacy values (confirmed, shipping) for backward compatibility.
+    enum: ['pending', 'processing', 'delivered', 'finished', 'cancelled', 'shipping', 'shipped'],
     default: 'pending'
   },
   isPaid: {
@@ -68,7 +75,15 @@ const orderSchema = new mongoose.Schema({
   },
   paidAt: {
     type: Date
-  }
+  },
+  // Track status changes with timestamps
+  statusHistory: [
+    {
+      status: { type: String, required: true },
+      changedAt: { type: Date, default: Date.now },
+      note: { type: String }
+    }
+  ]
 }, {
   timestamps: true
 });

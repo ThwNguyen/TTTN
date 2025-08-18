@@ -1,189 +1,264 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Add this import
-import HMlogo from '../../assets/HMlogo.png';
-
-const mainColor = '#e5c49b';
-const mainColorDark = '#bfa06e';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import HMlogo from "../../assets/HMlogo.png";
+import api from "../../utils/customAxios.js";
+import { FaArrowLeft } from "react-icons/fa";
+import MainIcon from "../../components/MainIcon.jsx";
 
 export default function Register() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate(); // Add this line
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showOptional, setShowOptional] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !email || !password) {
-      setError('Vui lòng nhập đầy đủ thông tin.');
+      setError("Vui lòng nhập đầy đủ thông tin bắt buộc.");
       return;
     }
-    setError('');
+    if (password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự.");
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
+
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        // Optionally show success or auto-login
-        navigate('/login');
+      const payload = {
+        name,
+        email,
+        password,
+        phone: phone || undefined,
+        address: address || undefined,
+        city: city || undefined,
+        zipCode: zipCode || undefined,
+      };
+      const res = await api.post("/auth/register", payload);
+      if (res.status === 201 || res.status === 200) {
+        setSuccess(res.data.message);
+        // Reset form
+        setName("");
+        setEmail("");
+        setPassword("");
+        setPhone("");
+        setAddress("");
+        setCity("");
+        setZipCode("");
       } else {
-        setError(data.message || 'Đăng ký thất bại.');
+        setError(res.data?.message || "Đăng ký thất bại.");
       }
     } catch (err) {
-      setError('Lỗi kết nối máy chủ.');
+      setError(err.response?.data?.message || "Lỗi kết nối máy chủ.");
+      console.error("Registration error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <form style={styles.loginBox} onSubmit={handleSubmit}>
-        <img src={HMlogo} alt="HM Logo" style={styles.logo} />
-        <div style={styles.loginTitle}>Đăng ký</div>
-        <div style={styles.formGroup}>
-          <label htmlFor="name" style={styles.label}>Họ tên</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            required
-            autoComplete="name"
-            style={styles.input}
+    <div className="bg-page-sky flex min-h-screen w-full flex-col">
+      {/* Top: back button only (no header) */}
+      <div className="mx-auto mt-7 flex h-14 w-full max-w-7xl items-center px-5">
+        <button
+          onClick={() => navigate(-1)}
+          className="group bg-surface/80 text-ink hover:bg-primary/60 focus:ring-handmade inline-flex h-12 w-12 cursor-pointer items-center justify-center rounded-full backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:scale-105 focus:ring-2 focus:outline-none active:scale-95"
+          aria-label="Quay lại"
+        >
+          <FaArrowLeft
+            size={30}
+            className="transition-transform duration-200 group-hover:-translate-x-0.5"
           />
-        </div>
-        <div style={styles.formGroup}>
-          <label htmlFor="email" style={styles.label}>Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-            autoComplete="username"
-            style={styles.input}
-          />
-        </div>
-        <div style={styles.formGroup}>
-          <label htmlFor="password" style={styles.label}>Mật khẩu</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            autoComplete="new-password"
-            style={styles.input}
-          />
-        </div>
-        {error && <div style={styles.error}>{error}</div>}
-        <button type="submit" style={styles.loginBtn}>Đăng ký</button>
-        <div style={styles.registerLink}>
-          Đã có tài khoản? <a href="/login" style={styles.link}>Đăng nhập</a>
-        </div>
-      </form>
+        </button>
+      </div>
+
+      {/* Content */}
+      <main className="flex flex-1 items-center justify-center px-5 py-10">
+        <form
+          onSubmit={handleSubmit}
+          className="border-primary bg-primary animate-fadeUp w-full max-w-md rounded-2xl border p-6 shadow-sm"
+        >
+          <div className="mb-4 flex flex-col items-center">
+            <MainIcon />
+            <h1 className="text-ink mt-3 text-2xl font-bold">Đăng ký</h1>
+            <p className="text-muted mt-1 text-sm">Tạo tài khoản HM Handmade</p>
+          </div>
+
+          <div className="mb-4">
+            <label
+              htmlFor="name"
+              className="text-ink mb-1 block text-sm font-medium"
+            >
+              Họ tên
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoComplete="name"
+              className="ring-handmade text-ink placeholder:text-muted focus:border-primary w-full rounded-lg border-2 border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label
+              htmlFor="email"
+              className="text-ink mb-1 block text-sm font-medium"
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="username"
+              className="ring-handmade text-ink placeholder:text-muted focus:border-primary w-full rounded-lg border-2 border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2"
+            />
+          </div>
+
+          <div className="mb-2">
+            <label
+              htmlFor="password"
+              className="text-ink mb-1 block text-sm font-medium"
+            >
+              Mật khẩu
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              autoComplete="new-password"
+              className="ring-handmade text-ink placeholder:text-muted focus:border-primary w-full rounded-lg border-2 border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2"
+            />
+          </div>
+
+          {/* Optional fields matching the User model */}
+          <div className="mt-3">
+            <button
+              type="button"
+              className="btn-outline w-full justify-between px-4 py-2 text-sm"
+              onClick={() => setShowOptional((v) => !v)}
+              aria-expanded={showOptional}
+              aria-controls="optional-fields"
+            >
+              Thêm thông tin (không bắt buộc)
+              <span className="ml-2">{showOptional ? '−' : '+'}</span>
+            </button>
+            {showOptional && (
+              <div id="optional-fields" className="mb-3 mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="phone" className="text-ink mb-1 block text-sm font-medium">Số điện thoại <span className="text-muted">(không bắt buộc)</span></label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="VD: 0901234567"
+                    autoComplete="tel"
+                    className="ring-handmade text-ink placeholder:text-muted focus:border-primary w-full rounded-lg border-2 border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="city" className="text-ink mb-1 block text-sm font-medium">Thành phố <span className="text-muted">(không bắt buộc)</span></label>
+                  <input
+                    type="text"
+                    id="city"
+                    name="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="VD: Hà Nội"
+                    autoComplete="address-level2"
+                    className="ring-handmade text-ink placeholder:text-muted focus:border-primary w-full rounded-lg border-2 border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="address" className="text-ink mb-1 block text-sm font-medium">Địa chỉ <span className="text-muted">(không bắt buộc)</span></label>
+                  <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Số nhà, đường, phường/xã..."
+                    autoComplete="address-line1"
+                    className="ring-handmade text-ink placeholder:text-muted focus:border-primary w-full rounded-lg border-2 border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="zipCode" className="text-ink mb-1 block text-sm font-medium">Mã bưu chính <span className="text-muted">(không bắt buộc)</span></label>
+                  <input
+                    type="text"
+                    id="zipCode"
+                    name="zipCode"
+                    value={zipCode}
+                    onChange={(e) => setZipCode(e.target.value)}
+                    placeholder="VD: 100000"
+                    autoComplete="postal-code"
+                    className="ring-handmade text-ink placeholder:text-muted focus:border-primary w-full rounded-lg border-2 border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2"
+                  />
+                </div>
+                <div className="sm:col-span-2 text-xs text-muted">Bạn có thể bổ sung hoặc chỉnh sửa các thông tin này sau trong trang Hồ sơ.</div>
+              </div>
+            )}
+          </div>
+
+          {error && (
+            <div className="mt-2 text-center text-sm text-red-600">{error}</div>
+          )}
+
+          {success && (
+            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="text-center text-sm text-green-800 font-medium">{success}</div>
+              <div className="text-center text-xs text-green-600 mt-1">
+                Vui lòng kiểm tra email và nhấn vào link xác thực để hoàn tất đăng ký.
+              </div>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="btn-primary mt-4 w-full justify-center py-2 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Đang đăng ký...
+              </div>
+            ) : (
+              "Đăng ký"
+            )}
+          </button>
+
+          <div className="text-ink mt-3 text-center text-sm">
+            Đã có tài khoản?{" "}
+            <Link to="/login" className="font-medium underline">
+              Đăng nhập
+            </Link>
+          </div>
+        </form>
+      </main>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    background: 'linear-gradient(to bottom, rgb(99, 169, 204), #f1e5af)',
-    minHeight: '100vh',
-    minWidth: '100vw',
-    width: '100vw',
-    height: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    zIndex: 1,
-  },
-  loginBox: {
-    background: mainColor,
-    border: '2px solid #eee',
-    borderRadius: 6,
-    boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
-    padding: '40px 32px 24px 32px',
-    minWidth: 340,
-    maxWidth: '90vw',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  logo: {
-    width: 100,
-    height: 100
-  },
-  loginTitle: {
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    color: '#111',
-    marginBottom: 24,
-    textAlign: 'center',
-    fontFamily: 'Segoe UI, Arial, sans-serif',
-  },
-  formGroup: {
-    width: '100%',
-    marginBottom: 18,
-  },
-  label: {
-    display: 'block',
-    marginBottom: 6,
-    fontSize: '1rem',
-    color: '#111',
-  },
-  input: {
-    width: '100%',
-    padding: '10px 12px',
-    border: '2px solid #ccc',
-    borderRadius: 6,
-    fontSize: '1rem',
-    transition: 'border-color 0.2s',
-    outline: 'none',
-    boxSizing: 'border-box',
-    marginBottom: 0,
-    background: 'rgb(220, 206, 206)',
-    color: '#111',
-  },
-  loginBtn: {
-    width: 'fit-content',
-    minWidth: 120,
-    padding: '10px 32px',
-    background: '#8d6748',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 6,
-    fontSize: '1.1rem',
-    fontWeight: 500,
-    cursor: 'pointer',
-    transition: 'background 0.2s',
-    boxShadow: '1px 2px 0 #bbb',
-    margin: '12px auto 0 auto',
-    display: 'block',
-  },
-  registerLink: {
-    marginTop: 18,
-    textAlign: 'center',
-    fontSize: '1rem',
-    color: '#111',
-  },
-  link: {
-    color: '#111',
-    textDecoration: 'underline',
-    fontWeight: 500,
-  },
-  error: {
-    color: 'red',
-    marginBottom: 10,
-    fontSize: '0.95rem',
-    textAlign: 'center',
-  },
-};

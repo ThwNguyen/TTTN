@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
 
 // Chỉ cho phép file ảnh
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|webp/;
+  const allowedTypes = /jpeg|jpg|png|webp|jfif/;
   const ext = allowedTypes.test(path.extname(file.originalname).toLowerCase());
   const mime = allowedTypes.test(file.mimetype);
   if (ext && mime) {
@@ -24,6 +24,13 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({ storage, fileFilter });
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB per file
+    files: 20,
+  },
+});
 
 module.exports = upload;

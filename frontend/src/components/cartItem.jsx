@@ -1,8 +1,13 @@
-import { useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
+import api from "../utils/customAxios.js";
 import { toast } from "react-toastify";
 
-export default function CartItem({ item, fetchCart, selectedItems, setSelectedItems }) {
+export default function CartItem({
+  item,
+  fetchCart,
+  selectedItems,
+  setSelectedItems,
+}) {
   const { _id, product, quantity } = item;
   const [updating, setUpdating] = useState(false);
 
@@ -11,12 +16,11 @@ export default function CartItem({ item, fetchCart, selectedItems, setSelectedIt
 
     try {
       setUpdating(true);
-      await axios.put(`/api/cart`, {
-        productId: product._id,
+      await api.put(`/cart/update/${_id}`, {
         quantity: newQuantity,
       });
       await fetchCart();
-    } catch (error) {
+    } catch {
       toast.error("Cập nhật số lượng thất bại");
     } finally {
       setUpdating(false);
@@ -31,8 +35,15 @@ export default function CartItem({ item, fetchCart, selectedItems, setSelectedIt
     }
   };
 
+  useEffect(() => {
+    // check if item is not fetched
+    if (!item || !_id) {
+      fetchCart();
+    }
+  }, [item]);
+
   return (
-    <div className="flex items-center justify-between border-b py-4 px-2">
+    <div className="flex items-center justify-between border-b px-2 py-4">
       {/* Checkbox */}
       <input
         type="checkbox"
@@ -44,15 +55,17 @@ export default function CartItem({ item, fetchCart, selectedItems, setSelectedIt
       {/* Product Info */}
       <div className="flex-1">
         <p className="font-medium">{product.name}</p>
-        <p className="text-sm text-gray-500">{product.price.toLocaleString()} đ</p>
+        <p className="text-sm text-gray-500">
+          {product.price.toLocaleString()} đ
+        </p>
       </div>
 
       {/* Quantity controls */}
-      <div className="flex items-center border rounded-md overflow-hidden bg-[#C4D8DC]">
+      <div className="flex items-center overflow-hidden rounded-md border bg-[#C4D8DC]">
         <button
           onClick={() => handleQuantityChange(quantity - 1)}
           disabled={updating}
-          className="px-3 py-1 text-red-600 text-xl"
+          className="px-3 py-1 text-xl text-red-600"
         >
           -
         </button>
@@ -60,7 +73,7 @@ export default function CartItem({ item, fetchCart, selectedItems, setSelectedIt
         <button
           onClick={() => handleQuantityChange(quantity + 1)}
           disabled={updating}
-          className="px-3 py-1 text-red-600 text-xl"
+          className="px-3 py-1 text-xl text-red-600"
         >
           +
         </button>

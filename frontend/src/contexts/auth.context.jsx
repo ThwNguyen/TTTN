@@ -1,6 +1,7 @@
-import { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import { createContext, useState, useEffect } from "react";
+import api from "../utils/customAxios.js";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -8,11 +9,9 @@ export const AuthProvider = ({ children }) => {
 
   const fetchProfile = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/auth/me', {
-        withCredentials: true,
-      });
+      const res = await api.get("/auth/me");
       setCurrentUser(res.data);
-    } catch (err) {
+    } catch {
       setCurrentUser(null);
     }
   };
@@ -22,7 +21,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ currentUser, setCurrentUser }}>
+    <AuthContext.Provider value={{ currentUser, setCurrentUser, fetchProfile }}>
       {children}
     </AuthContext.Provider>
   );

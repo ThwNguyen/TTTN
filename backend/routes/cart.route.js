@@ -13,7 +13,7 @@ const {
 router.post('/', protect, addToCart);
 router.get('/', protect, getCart);
 //route update
-router.put('/update', protect, updateCartItem);
+router.put('/update/:productId', protect, updateCartItem);
 router.delete('/remove/:productId', protect, removeFromCart);
 router.delete('/clear', protect, clearCart);
 router.post('/checkout/:productId', protect, checkout);
