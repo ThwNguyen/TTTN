@@ -197,9 +197,7 @@ export default function Homepage() {
         <div className="flex w-full justify-end mt-8 mb-4">
           <button
             className="rounded-xl py-2 px-4 bg-white/70 hover:bg-white text-ink transition"
-            // onClick={() => navigate(`/products${activeCategoryId ? `?category=${encodeURIComponent(activeCategoryId)}` : ''}`)}
-            onClick={() => navigate('/products')}
-
+            onClick={() => navigate(`/products${activeCategoryId ? `?category=${encodeURIComponent(activeCategoryId)}` : ''}`)}
           >
             Xem tất cả
           </button>

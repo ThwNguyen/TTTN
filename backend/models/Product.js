@@ -27,9 +27,11 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Vui lòng nhập tên sản phẩm']
   },
+  // URL/search friendly slug derived from name
   slug: {
     type: String
   },
+  // ASCII-folded version of name for diacritic-insensitive search
   nameNormalized: {
     type: String,
     index: true,

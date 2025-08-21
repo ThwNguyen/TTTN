@@ -87,7 +87,7 @@ const getAllProducts = async (req, res) => {
   }
 };
 
-// ...existing code...
+
 
 const getAllProductsByCategory = async (req, res) => {
   try {
@@ -213,6 +213,9 @@ const createProduct = async (req, res) => {
     const foundCategory = await Category.findById(category);
     if (!foundCategory)
       return res.status(400).json({ message: "Danh mục không tồn tại" });
+
+    if (foundCategory.isActive === false) 
+  return res.status(400).json({ message: "Danh mục này đã bị ẩn, vui lòng chọn danh mục khác" });
 
     // Stock is managed exclusively via Import records; start at 0 on create
     const newProduct = new Product({
